@@ -1,22 +1,11 @@
-import { Alchemy, Network } from "alchemy-sdk";
-import { useEffect, useState } from "react";
-
+import { useEffect, useCallback, useState } from "react";
+import { getBlock, getTransaction ,getTransactionReceipt} from "./utils/Tran";
 import "./App.css";
-
+import { Alchemy,Utils, Network } from "alchemy-sdk";
+import {ethers ,AbiCoder,decodeBytes32String}from'ethers'
 // Refer to the README doc for more information about using API
 // keys in client-side code. You should never do this in production
 // level code.
-const settings = {
-  apiKey: "alchemy-replit",
-  network: Network.ETH_MAINNET,
-};
-
-// In this week's lessons we used ethers.js. Here we are using the
-// Alchemy SDK is an umbrella library with several different packages.
-//
-// You can read more about the packages here:
-//   https://docs.alchemy.com/reference/alchemy-sdk-api-surface-overview#api-surface
-const alchemy = new Alchemy(settings);
 
 function App() {
   const [blockNumber, setBlockNumber] = useState();
@@ -25,76 +14,158 @@ function App() {
   const [FeeRecepient, setFeerecepient] = useState();
   const [parentHash, setParentHash] = useState();
   const [totalDifficulty, setTotaldifficulty] = useState();
-  
-  useEffect(() => {
-    const main = async () => {
-      // using the block tag "latest" to get the latest block
-      // could've used a block hash to get a particualr block as well
-      //let blockTagOrHash = "latest"
-      setBlockNumber(await alchemy.core.getBlockNumber());
+  const [baseFee, setBaseFee] = useState();
+  const [gasLimit, setgasLimit] = useState();
+  const [gasUsed, setgasUsed] = useState();
+  const [extraData, setExtraData] = useState();
+  const [hash, setHash] = useState();
+  const [burntFeee, setBurntFee] = useState();
+  const [nonce, setNonce] = useState();
+  const [size, setSize] = useState();
+  const [withdraw, setWithdrawalRoot] = useState();
+  const [transactionRoot, setTransactionRoot] = useState();
+  const [stateRoot, setStateRoot] = useState();
+  const [transaction, setTransactionList] = useState();
+  //return a memoized version of the callback that only changes if one of the inputs has changed.
+  const onBlockChange = useCallback((e) =>
+    setBlockNumber(Number(e.target.value))
+  );
+  const main = async (blockNumber1) => {
+    // calling the getBlock method to get the latest block
+    const response = await getBlock(blockNumber1);
+    // console.log(response.transactions);
+    setBlockHieght(response.number);
+    const date = Date(response.timestamp);
 
-      // calling the getBlock method to get the latest block
-      let response = await alchemy.core.getBlock(blockNumber);
+    setTimestamp(date);
+    setParentHash(response.parentHash);
+    setTotaldifficulty(response.difficulty);
+    setFeerecepient(response.miner);
+    setTransactionList(response.transactions);
 
-      setBlockHieght(response.number);
-      setTimestamp(response.timestamp);
-      setParentHash(response.parentHash);
-      setTotaldifficulty(response.difficulty);
-      setFeerecepient(response.miner);
+    setBaseFee(response.baseFeePerGas);
+    setExtraData(response.extraData);
+    setgasLimit(response.gasLimit);
 
-      // logging the response to the console
-      //console.log(response);
-    };
+    setgasUsed(response.gasUsed);
+    setHash(response.hash);
 
-    main();
-  });
+    setSize(response.size);
+    setNonce(response.nonce);
+    setStateRoot(response.stateRoot);
+    setWithdrawalRoot(response.withdrawalsRoot);
+    setTransactionRoot(response.transactionsRoot);
+    await getTransactionHash(response.transactions);
+  };
+
+  const getTransactionHash = async (transaction) => {
+    const transaction1 = [];
+    //lenth of array is less than one since array start at 0
+    for (var i = 0; i < transaction.length; i++) {
+      transaction1.push(transaction[i].hash);
+    }
+    // console.log(transaction1);
+    // setTransactionList(transaction1);
+    let list = document.getElementById("mylist");
+    transaction1.forEach((item) => {
+      let li = document.createElement("li");
+      li.innerText = item;
+      list.appendChild(li);
+    });
+  };
+  async function gettransacation(){
+    //returns transaction receipts
+  const trans=  await getTransactionReceipt('0xcad5bd742fb19899edc3fa1c1d1c1c3c322d6ac7ce740860991995860dad94d4');
+  //first calls thedefaultAbi then decodes 
+  const data='0x00000000000000000000000022f9dcf4647084d6c31b2765f6910cd85c178c18;                                         /';
+  const log1=AbiCoder.defaultAbiCoder().decode(['address'],data);
+  console.log(log1);
+  }
 
   return (
-    <>
-      Block Number: {blockNumber}
+    <div>
       <div>
-        <button type="button" className="btn btn-primary btn-round">
-          Notifications <span className="badge badge-warning">4</span>
-        </button>
-        <a
-          href="javascript:;"
-          className="btn btn-primary btn-lg disabled"
-          role="button"
-          aria-disabled="true"
-        >
-          Primary link
-        </a>
+        Block Number: {"#" + blockNumber}
         <div>
-          <label> Block Height: {blockHieght}</label>
+          <input
+            placeholder="Enter your BlockNumber"
+            value={blockNumber}
+            onChange={onBlockChange}
+          />
+          <button
+            onClick={async () => {
+              await main(blockNumber);
+            }}
+          >
+            getBlockInfo
+          </button>
+          <div>
+            <label> Block Height: {blockHieght}</label>
+          </div>
+          <div>
+            <label>Status:</label>
+          </div>
+          <div>
+            <label>Timestamp:{timestamp}</label>
+          </div>
+          <div>
+            <label>Proposed On:</label>
+          </div>
+          <div>
+            <label> Fee Recipient:{FeeRecepient}</label>
+          </div>
+          <div>
+            <label>Block Reward:</label>
+          </div>
+          <div>
+            <label>Total Difficulty:{totalDifficulty}</label>
+          </div>
+          <div>
+            <label> Size:{size}</label>
+          </div>
         </div>
         <div>
-          <label>Timestamp:{timestamp}</label>
+          <label>Gas Used: {gasUsed}</label>
         </div>
         <div>
-          <label> Fee Recipient:{FeeRecepient}</label>
+          <label>Gas Limit:{gasLimit}</label>
         </div>
         <div>
-          <label>Total Difficulty:{totalDifficulty}</label>
+          <label>Base Fee Per Gas: {baseFee}</label>
         </div>
         <div>
-          <label> Parent Hash:{parentHash}</label>
+          <label>Burnt Fees: {gasUsed * baseFee}</label>
         </div>
         <div>
-          <label>StateRoot:</label>
+          <label>Extra Data:{extraData}</label>
         </div>
         <div>
-          <label>nonce</label>
+          <label>Hash:{hash}</label>
         </div>
         <div>
-          <label>Base Fee Per Gas:</label>
+          <label>Parent Hash:{parentHash}</label>
+        </div>
+        <div>
+          <label>State Root:{stateRoot}</label>
+        </div>
+        <div>
+          <label>Withdrawal Root:{withdraw}</label>
+        </div>
+        <div>
+          <label>Nonce:{nonce}</label>
+        </div>
+        <div>
+          <label>TransactionRoot: {transactionRoot}</label>
+        </div>
+        <div>
+          <ul id="mylist">TransactionList</ul>
+        </div>
+        <div>
+          <button onClick={gettransacation
+          }>Transaction Information</button>
         </div>
       </div>
-      <div>
-        <label>
-          
-        </label>
-      </div>
-    </>
+    </div>
   );
 }
 
