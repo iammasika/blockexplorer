@@ -1,11 +1,10 @@
+"use client"
 import { useEffect, useCallback, useState } from "react";
 import { getBlock, getTransaction ,getTransactionReceipt} from "./utils/Tran";
-import "./App.css";
+import "./globals.css";
 import { Alchemy,Utils, Network } from "alchemy-sdk";
-import {ethers ,AbiCoder,decodeBytes32String}from'ethers'
-// Refer to the README doc for more information about using API
-// keys in client-side code. You should never do this in production
-// level code.
+import {ethers ,AbiCoder,decodeBytes32String}from "ethers"
+import Example from "./navbar";
 
 function App() {
   const [blockNumber, setBlockNumber] = useState();
@@ -84,6 +83,7 @@ function App() {
 
   return (
     <div>
+      <Example/>
       <div>
         Block Number: {"#" + blockNumber}
         <div>

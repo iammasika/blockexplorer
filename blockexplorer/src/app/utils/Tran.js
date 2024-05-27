@@ -1,5 +1,5 @@
 import { Alchemy, Utils, Network } from "alchemy-sdk";
-import { ethers } from "ethers";
+
 // Configures the Alchemy SDK
 const config = {
   apiKey: "alchemy-replit", // Replace with your API key
